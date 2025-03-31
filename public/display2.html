@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Display POV #2</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:8080/socket.io/socket.io.js"></script>
     <style>
       html,
       body {
@@ -32,21 +32,30 @@
     ></iframe>
 
     <script>
-      const socket = io();
-      const iframe = document.getElementById("iframeContainer");
+      const socket = io("http://localhost:8080");
 
-      socket.on("display-pov2", (data) => {
-        if (data.pseudo) {
-          const remoteUrl = `https://vdo.ninja/?view=${encodeURIComponent(
-            data.pseudo
-          )}&solo&room=EXTIA_GAMING_NIGHT2`;
-          iframe.src = remoteUrl;
-        }
+      socket.on("connect", () => {
+        console.log("✅ Connecté au serveur Socket.IO, ID:", socket.id);
       });
 
-      socket.on("reset-pov2", () => {
-        iframe.src =
-          "https://vdo.ninja/?view=Game2&solo&room=EXTIA_GAMING_NIGHT2";
+      socket.on("connect_error", (error) => {
+        console.error("❌ Erreur de connexion Socket.IO:", error);
+      });
+
+      const iframe = document.getElementById("iframeContainer");
+
+      socket.on("update-display", (data) => {
+        console.log("🔔 Received data:", data);
+        const pseudo = data["2"];
+
+        if (pseudo) {
+          iframe.src = `https://vdo.ninja/?view=${encodeURIComponent(
+            pseudo
+          )}&solo&room=EXTIA_GAMING_NIGHT2`;
+        } else {
+          iframe.src =
+            "https://vdo.ninja/?view=Game2&solo&room=EXTIA_GAMING_NIGHT2";
+        }
       });
     </script>
   </body>

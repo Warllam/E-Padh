@@ -144,6 +144,7 @@ io.on("connection", (socket) => {
 
   // Quand l'admin demande d'afficher un pseudo sur display1 ou 2
   socket.on("display-pov", ({ pseudo, displayId }) => {
+    console.log(`display-pov: ${pseudo} sur display ${displayId}`);
     displayState[displayId] = pseudo;
     io.emit("update-display", displayState);
   });

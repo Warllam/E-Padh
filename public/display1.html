@@ -28,25 +28,26 @@
   <body>
     <iframe
       id="iframeContainer"
-      src="https://vdo.ninja/?view=Game&solo&room=EXTIA_GAMING_NIGHT2"
+      src="https://vdo.ninja/?view=Game1&solo&room=EXTIA_GAMING_NIGHT2"
     ></iframe>
 
     <script>
       const socket = io();
       const iframe = document.getElementById("iframeContainer");
 
-      socket.on("display-pov1", (data) => {
-        if (data.pseudo) {
-          const remoteUrl = `https://vdo.ninja/?view=${encodeURIComponent(
-            data.pseudo
-          )}&solo&room=EXTIA_GAMING_NIGHT2`;
-          iframe.src = remoteUrl;
-        }
-      });
+      // Correction : écoute de "update-display"
+      socket.on("update-display", (data) => {
+        console.log("Received data:", data); // Ajout d'un log pour le débogage
+        const pseudo = data["1"]; // On traite uniquement le Display 1
 
-      socket.on("reset-pov1", () => {
-        iframe.src =
-          "https://vdo.ninja/?view=Game&solo&room=EXTIA_GAMING_NIGHT2";
+        if (pseudo) {
+          iframe.src = `https://vdo.ninja/?view=${encodeURIComponent(
+            pseudo
+          )}&solo&room=EXTIA_GAMING_NIGHT2`;
+        } else {
+          iframe.src =
+            "https://vdo.ninja/?view=Game1&solo&room=EXTIA_GAMING_NIGHT2";
+        }
       });
     </script>
   </body>
