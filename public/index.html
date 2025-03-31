@@ -1,0 +1,78 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Interface Joueur</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      // Paramétrage de base (la room VDO.Ninja)
+      const roomLink =
+        "https://vdo.ninja/?room=EXTIA_GAMING_NIGHT2&do&q&broadcast&nocursor";
+
+      function generateShareLink(pseudo) {
+        const encodedPseudo = encodeURIComponent(pseudo);
+        return (
+          roomLink +
+          `&push=${encodedPseudo}&screenshare&autostart&label=${encodedPseudo}&maxfps=60&videobitrate=6000&codec=h264`
+        );
+      }
+    </script>
+  </head>
+  <body class="bg-gray-100 min-h-screen py-8 px-4">
+    <div class="max-w-xl mx-auto bg-white p-6 shadow rounded">
+      <h1 class="text-3xl font-bold mb-4">Interface Joueur</h1>
+      <p class="mb-4">
+        Sélectionnez votre pseudo pour démarrer le partage d’écran (VDO.Ninja)
+      </p>
+
+      <!-- Sélecteur pseudo + Bouton démarrer -->
+      <div class="flex items-center gap-4 mb-4">
+        <select
+          id="playerSelect"
+          class="border border-gray-300 p-2 rounded w-1/2"
+        ></select>
+        <button
+          id="startShareBtn"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Démarrer le partage
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const socket = io();
+      const playerSelect = document.getElementById("playerSelect");
+      const startShareBtn = document.getElementById("startShareBtn");
+
+      // Charger la liste des joueurs depuis l'API
+      fetch("/api/players")
+        .then((res) => res.json())
+        .then((data) => {
+          data.players.forEach((p) => {
+            const opt = document.createElement("option");
+            opt.value = p;
+            opt.textContent = p;
+            playerSelect.appendChild(opt);
+          });
+        })
+        .catch((err) => {
+          console.error("Erreur lors du chargement des joueurs :", err);
+        });
+
+      // Bouton démarrer
+      startShareBtn.addEventListener("click", () => {
+        const pseudo = playerSelect.value;
+        const url = generateShareLink(pseudo);
+        // Ouvre dans un nouvel onglet
+        window.open(url, "_blank");
+        // Annoncer au serveur qu'on démarre la diffusion
+        socket.emit("start-share", pseudo);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Tailwind pour le style -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto py-6 px-4">
+      <h1 class="text-3xl font-bold mb-6">Interface Admin</h1>
+
+      <!-- Bloc de gestion des diffusions -->
+      <section class="mb-8 p-4 bg-white shadow rounded">
+        <h3 class="font-semibold mb-2">Joueurs actuellement en diffusion :</h3>
+        <!-- Affichage de l'état actuel de chaque Display -->
+        <div id="displayStates" class="mb-4 text-gray-800">
+          <p>Display 1 : <span id="display1State">-</span></p>
+          <p>Display 2 : <span id="display2State">-</span></p>
+          <div class="mt-2">
+            <button
+              data-reset="1"
+              class="resetBtn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2"
+            >
+              Reset Display 1
+            </button>
+            <button
+              data-reset="2"
+              class="resetBtn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Reset Display 2
+            </button>
+          </div>
+        </div>
+
+        <!-- Liste des POV actifs (VDO.Ninja) -->
+        <div class="mb-4">
+          <h3 class="font-semibold mb-2">POV actifs (VDO.Ninja) :</h3>
+          <div id="povList" class="text-gray-800">
+            <div role="status">
+              <svg
+                aria-hidden="true"
+                class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                viewBox="0 0 100 101"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                  fill="currentFill"
+                />
+              </svg>
+              <span class="sr-only">Loading...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sélecteur pour forcer l'affichage d'une POV si besoin -->
+        <div class="flex items-center gap-2">
+          <select
+            id="forcePlayerSelect"
+            class="border border-gray-300 p-2 rounded"
+          ></select>
+          <button
+            data-display="1"
+            class="displayBtn bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Envoyer sur Display 1
+          </button>
+          <button
+            data-display="2"
+            class="displayBtn bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Envoyer sur Display 2
+          </button>
+        </div>
+
+        <!-- Lien direct vers le dashboard VDO.Ninja -->
+        <div class="mt-4">
+          <a
+            href="https://vdo.ninja/?director=EXTIA_GAMING_NIGHT2"
+            target="_blank"
+            class="text-blue-600 hover:underline"
+          >
+            Ouvrir le dashboard détaillé VDO.Ninja
+          </a>
+        </div>
+      </section>
+
+      <!-- Formulaire pour ajouter une équipe (dans un <details> rétractable) -->
+      <details class="mb-8 p-4 bg-white shadow rounded">
+        <summary class="text-xl font-semibold mb-4 cursor-pointer">
+          Ajouter une équipe
+        </summary>
+        <form id="addTeamForm" class="flex flex-col gap-4 mt-4">
+          <div>
+            <label class="block font-semibold">Nom de l'équipe :</label>
+            <input
+              type="text"
+              id="teamName"
+              required
+              class="border border-gray-300 p-2 w-full rounded"
+              placeholder="Ex. Binome Poche et Lululink"
+            />
+          </div>
+          <div>
+            <label class="block font-semibold">Joueur 1 :</label>
+            <input
+              type="text"
+              id="teamJ1"
+              class="border border-gray-300 p-2 w-full rounded"
+            />
+          </div>
+          <div>
+            <label class="block font-semibold">Joueur 2 :</label>
+            <input
+              type="text"
+              id="teamJ2"
+              class="border border-gray-300 p-2 w-full rounded"
+            />
+          </div>
+          <button
+            type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Ajouter
+          </button>
+        </form>
+        <div id="addTeamMessage" class="mt-2"></div>
+      </details>
+
+      <!-- Liste des équipes (dans un <details> rétractable) -->
+      <details class="mb-8 p-4 bg-white shadow rounded">
+        <summary class="text-xl font-semibold mb-4 cursor-pointer">
+          Liste des équipes
+        </summary>
+        <ul id="teamsList" class="list-disc list-inside space-y-2 mt-4"></ul>
+      </details>
+    </div>
+
+    <!-- Fichier JS principal (Socket + CRUD) -->
+    <script src="/js/admin.js"></script>
+
+    <!-- Script pour charger dynamiquement la liste de joueurs et filtrer les POV -->
+    <script>
+      // Ensemble des joueurs autorisés (on va le remplir via /api/players)
+      const knownPlayers = new Set();
+
+      /**
+       * Récupère la liste des joueurs (players) depuis /api/players,
+       * et les stocke dans knownPlayers.
+       */
+      function loadKnownPlayers() {
+        return fetch("/api/players")
+          .then((res) => res.json())
+          .then((data) => {
+            // data.players doit être un tableau de pseudos
+            data.players.forEach((p) => {
+              knownPlayers.add(p);
+            });
+          })
+          .catch((err) => {
+            console.error("Erreur loadKnownPlayers:", err);
+          });
+      }
+
+      /**
+       * Récupère la liste des POV depuis /api/vdo-ninja-pov,
+       * filtre ceux qui sont dans knownPlayers, et les affiche
+       */
+      function fetchPovsFromVdoNinja() {
+        fetch("/api/vdo-ninja-pov")
+          .then((res) => res.json())
+          .then((data) => {
+            const povListEl = document.getElementById("povList");
+            const forcePlayerSelect =
+              document.getElementById("forcePlayerSelect");
+
+            // On vide l'affichage
+            povListEl.innerHTML = "";
+            forcePlayerSelect.innerHTML = "";
+
+            if (!data.success) {
+              povListEl.textContent =
+                "Erreur lors de la récupération : " + data.error;
+              return;
+            }
+
+            const { activePovs } = data;
+            if (!activePovs.length) {
+              povListEl.textContent = "Aucun flux détecté pour l’instant.";
+              return;
+            }
+
+            // Filtrer uniquement les joueurs connus
+            const filteredPovs = activePovs.filter((p) =>
+              knownPlayers.has(p.label)
+            );
+
+            if (!filteredPovs.length) {
+              povListEl.textContent =
+                "Aucun flux correspondant à un joueur connu.";
+              return;
+            }
+
+            // Construire l’affichage
+            const ul = document.createElement("ul");
+            ul.classList.add("list-disc", "ml-5");
+
+            filteredPovs.forEach((p) => {
+              const li = document.createElement("li");
+              li.textContent = `SID: ${p.sid} | Label: ${p.label}`;
+              ul.appendChild(li);
+
+              const opt = document.createElement("option");
+              opt.value = p.label;
+              opt.textContent = p.label;
+              forcePlayerSelect.appendChild(opt);
+            });
+
+            povListEl.appendChild(ul);
+          })
+          .catch((err) => {
+            console.error(err);
+            document.getElementById("povList").textContent =
+              "Erreur fetchPovsFromVdoNinja: " + err.message;
+          });
+      }
+
+      // On charge d'abord les joueurs connus, puis on lance le polling
+      loadKnownPlayers().then(() => {
+        // Premier fetch initial, puis polling toutes les 10s
+        fetchPovsFromVdoNinja();
+        setInterval(fetchPovsFromVdoNinja, 10000);
+      });
+    </script>
+  </body>
+</html>
