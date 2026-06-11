@@ -1,0 +1,1 @@
+Real-time admin dashboard for managing a multiplayer gaming event. Handles team setup, live POV stream routing (VDO.Ninja), and display control via Socket.IO. Built with Node.js, Express and Socket.IO.
